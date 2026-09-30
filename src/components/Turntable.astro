@@ -1,0 +1,297 @@
+---
+// Riquadro del plastico stampato: giro a 360° di foto (<turntable-plastico>), singola
+// fotografia, oppure segnaposto "Plastico in lavorazione". Riempie il contenitore
+// genitore: le proporzioni del riquadro le decide la pagina.
+import type { Plastico } from '../lib/opere';
+
+interface Props {
+  plastico: Plastico;
+  /** Nome dell'opera, per i testi alternativi. */
+  nome: string;
+}
+
+const { plastico, nome } = Astro.props;
+---
+
+{
+  plastico.tipo === 'turntable' && (
+    <turntable-plastico
+      class="plastico turntable"
+      data-frame={JSON.stringify(plastico.frame)}
+      data-inverti={plastico.inverti ? '' : undefined}
+      data-etichetta={`Plastico stampato di ${nome}, vista a 360°`}
+    >
+      {/* Senza JavaScript, e finché il canvas non ha disegnato, si vede la vista frontale. */}
+      <img
+        class="plastico__immagine turntable__immagine"
+        data-adatta
+        src={plastico.frame[0]}
+        alt={`Plastico stampato in 3D di ${nome}`}
+        decoding="async"
+        loading="lazy"
+        draggable="false"
+      />
+      <canvas class="turntable__tela" aria-hidden="true" />
+
+      <div class="turntable__sovrimpressione" aria-hidden="true">
+        <p class="etichetta turntable__targhetta turntable__suggerimento">
+          <svg class="turntable__freccia" viewBox="0 0 20 8" width="20" height="8" fill="none">
+            <path d="M1 4h18M4.5 1 1 4l3.5 3M15.5 1 19 4l-3.5 3" />
+          </svg>
+          Trascina per ruotare
+        </p>
+        <p class="etichetta turntable__targhetta turntable__conteggio">Caricamento 1 / {plastico.frame.length}</p>
+      </div>
+      <div class="turntable__barra" aria-hidden="true" />
+    </turntable-plastico>
+  )
+}
+
+{
+  plastico.tipo === 'foto' && (
+    <div class="plastico">
+      <img
+        class="plastico__immagine"
+        data-adatta
+        src={plastico.src}
+        alt={`Fotografia del plastico stampato in 3D di ${nome}`}
+        decoding="async"
+        loading="lazy"
+      />
+    </div>
+  )
+}
+
+{
+  plastico.tipo === 'segnaposto' && (
+    <div class="plastico segnaposto">
+      {/* Un piatto girevole con sopra un edificio stampato a metà: la parte ancora da stampare è tratteggiata. */}
+      <svg class="segnaposto__disegno" viewBox="12 40 216 136" fill="none" aria-hidden="true">
+        <g class="segnaposto__tratti">
+          <path class="segnaposto__lieve" d="M20 131v7a100 22 0 0 0 200 0v-7" />
+          <ellipse class="segnaposto__piatto" cx="120" cy="131" rx="100" ry="22" />
+          <path class="segnaposto__pieno" d="M76.8 126.3 137.8 134.7 163.2 125.7V99.7L102.2 91.3 76.8 100.3Z" />
+          <path
+            class="segnaposto__lieve"
+            d="M76.8 119.8 137.8 128.2 163.2 119.2M76.8 113.3 137.8 121.7 163.2 112.7M76.8 106.8 137.8 115.2 163.2 106.2"
+          />
+          <path d="M76.8 126.3 137.8 134.7 163.2 125.7M76.8 126.3V100.3M137.8 134.7V108.7M163.2 125.7V99.7" />
+          <path class="segnaposto__strato" d="M76.8 100.3 137.8 108.7 163.2 99.7 102.2 91.3Z" />
+          <path
+            class="segnaposto__da-stampare"
+            d="M76.8 100.3V80.3M137.8 108.7V88.7M163.2 99.7V79.7M76.8 80.3 137.8 88.7 163.2 79.7 150.5 60.2 137.8 88.7M76.8 80.3 89.5 51.8 150.5 60.2"
+          />
+          <path d="M64.6 161A118 34 0 0 0 175.4 161M169.9 164.9 175.4 161 169 159" />
+        </g>
+      </svg>
+      <p class="etichetta">Plastico in lavorazione</p>
+      <p class="sottotitolo segnaposto__testo">La stampa di quest’opera è in corso.</p>
+    </div>
+  )
+}
+
+<script>
+  import '../scripts/turntable';
+</script>
+
+<style>
+  .plastico {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--carta-scura);
+  }
+
+  .plastico__immagine {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  /* --- Giro a 360° ------------------------------------------------------------ */
+
+  .turntable {
+    /* Lo scorrimento verticale resta alla pagina; il trascinamento orizzontale ruota. */
+    touch-action: pan-y pinch-zoom;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .turntable[data-attivo] {
+    cursor: grab;
+  }
+
+  .turntable[data-trascinamento] {
+    cursor: grabbing;
+  }
+
+  /* Il riquadro della pagina può ritagliare ciò che sporge: il contorno va dentro, e su uno
+     strato sopra canvas e immagine (un outline interno verrebbe coperto da loro). */
+  .turntable::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .turntable:focus-visible {
+    outline: none;
+  }
+
+  .turntable:focus-visible::after {
+    outline: 2px solid var(--petrolio);
+    outline-offset: -2px;
+  }
+
+  /* Safari prima della 15.4 non conosce :focus-visible. */
+  @supports not selector(:focus-visible) {
+    .turntable:focus {
+      outline: none;
+    }
+
+    .turntable:focus::after {
+      outline: 2px solid var(--petrolio);
+      outline-offset: -2px;
+    }
+  }
+
+  .turntable__tela {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+  }
+
+  .turntable[data-attivo] .turntable__tela {
+    display: block;
+  }
+
+  .turntable[data-disegnato] .turntable__immagine {
+    visibility: hidden;
+  }
+
+  .turntable__sovrimpressione {
+    position: absolute;
+    inset: auto 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--spazio-2);
+    padding: var(--spazio-3);
+    pointer-events: none;
+  }
+
+  .turntable__targhetta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spazio-2);
+    padding: 0.2rem 0.5rem;
+    border-radius: var(--raggio);
+    background: var(--carta-scura);
+    background: color-mix(in srgb, var(--carta-scura) 88%, transparent);
+    font-size: 0.6875rem;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 400ms ease;
+  }
+
+  .turntable__freccia {
+    stroke: currentColor;
+    stroke-width: 1;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .turntable[data-attivo]:not([data-interagito]) .turntable__suggerimento,
+  .turntable[data-caricamento] .turntable__conteggio {
+    opacity: 1;
+  }
+
+  .turntable__conteggio {
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .turntable__barra {
+    position: absolute;
+    inset: auto 0 0;
+    height: 2px;
+    background: var(--petrolio);
+    transform: scaleX(0);
+    transform-origin: left center;
+    opacity: 0;
+    transition:
+      transform 200ms ease-out,
+      opacity 400ms ease;
+  }
+
+  .turntable[data-caricamento] .turntable__barra {
+    opacity: 1;
+  }
+
+  /* --- Segnaposto -------------------------------------------------------------- */
+
+  .segnaposto {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spazio-3);
+    padding: var(--spazio-6) var(--spazio-5);
+    text-align: center;
+  }
+
+  .segnaposto__disegno {
+    width: min(70%, 20rem);
+    max-height: 50%;
+    margin-bottom: var(--spazio-3);
+  }
+
+  .segnaposto__tratti {
+    stroke: var(--testo-secondario);
+    stroke-width: 1;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Tratti a 1px a qualunque dimensione, anche a schermo intero. */
+  .segnaposto__tratti > * {
+    vector-effect: non-scaling-stroke;
+  }
+
+  .segnaposto__lieve {
+    stroke: var(--filetto);
+  }
+
+  .segnaposto__piatto {
+    fill: var(--carta-chiara);
+  }
+
+  /* Le facce già stampate coprono il bordo del piatto dietro l'edificio. */
+  .segnaposto__pieno {
+    fill: var(--carta-scura);
+    stroke: none;
+  }
+
+  .segnaposto__strato {
+    stroke: var(--petrolio);
+  }
+
+  .segnaposto__da-stampare {
+    stroke-opacity: 0.5;
+    stroke-dasharray: 2 3;
+  }
+
+  .segnaposto__testo {
+    text-wrap: balance;
+  }
+</style>

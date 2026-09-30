@@ -1,0 +1,90 @@
+---
+// Pagina provvisoria per le sezioni non ancora scritte (Chi siamo, A cosa serve, Contatti).
+// Contiene già BaseLayout, così ogni pagina che la usa resta di poche righe.
+// Il testo passato fra i tag diventa la riga di cortesia sotto "In preparazione".
+//
+// Queste pagine non vanno indicizzate: quando una sezione verrà scritta davvero,
+// smetterà di usare questo componente e il noindex sparirà da solo.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { url } from '../lib/url';
+import { NOME_SITO } from '../lib/sito';
+
+interface Props {
+  /** Titolo della sezione: h1 e <title>. */
+  titolo: string;
+  /** Etichetta mono sopra il titolo. */
+  etichetta?: string;
+  /** Descrizione per le anteprime dei link (meta description). */
+  descrizione?: string;
+}
+
+const { titolo, etichetta = 'Sezione', descrizione = `${titolo} — ${NOME_SITO}. Sezione in preparazione.` } = Astro.props;
+---
+
+<BaseLayout titolo={titolo} descrizione={descrizione} noindex>
+  <div class="contenitore">
+    <div class="provvisoria">
+      <p class="provvisoria__etichetta etichetta">
+        {/* "fareLAB" resta scritto così anche dentro l'etichetta maiuscola. */}
+        {etichetta.split(/(fareLAB)/).map((parte) => (parte === 'fareLAB' ? <span class="nome-proprio">{parte}</span> : parte))}
+      </p>
+      <h1>{titolo}</h1>
+      <p class="provvisoria__stato sottotitolo">In preparazione.</p>
+      <p class="provvisoria__cortesia testo-secondario">
+        <slot>Stiamo scrivendo questa pagina.</slot>
+      </p>
+      <p class="provvisoria__ritorno">
+        <a class="etichetta etichetta--accento" href={url('')}>
+          <span aria-hidden="true">←</span> Torna alla galleria
+        </a>
+      </p>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  /* Colonna di testo stretta, allineata a sinistra come una pagina di catalogo. */
+  .provvisoria {
+    max-width: var(--larghezza-testo);
+    padding-top: var(--spazio-8);
+  }
+
+  .provvisoria__etichetta {
+    margin-bottom: var(--spazio-4);
+  }
+
+  .provvisoria__stato {
+    margin-top: var(--spazio-5);
+  }
+
+  .provvisoria__cortesia {
+    margin-top: var(--spazio-3);
+  }
+
+  .provvisoria__ritorno {
+    margin-top: var(--spazio-7);
+    padding-top: var(--spazio-5);
+    border-top: var(--filo);
+  }
+
+  /* Alto 44px: bersaglio comodo col dito. */
+  .provvisoria__ritorno a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    min-height: 2.75rem;
+    text-decoration: none;
+  }
+
+  .provvisoria__ritorno a:hover,
+  .provvisoria__ritorno a:focus-visible {
+    color: var(--petrolio-scuro);
+    text-decoration-line: underline;
+  }
+
+  @media (min-width: 64rem) {
+    .provvisoria {
+      padding-top: var(--spazio-9);
+    }
+  }
+</style>

@@ -1,0 +1,108 @@
+---
+// Home: la galleria delle opere, impaginata come il catalogo di una mostra.
+// Ordine delle schede = ordine di data/opere.json; compaiono solo le opere pubblicate.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import CardOpera from '../components/CardOpera.astro';
+import { getOpere } from '../lib/opere';
+
+const opere = getOpere();
+
+const numero = String(opere.length).padStart(2, '0');
+const conteggio = opere.length === 1 ? `${numero} opera` : `${numero} opere`;
+
+const descrizione =
+  "Edifici rilevati con il drone tra Monopoli e la Valle d'Itria: per ogni opera un modello 3D da esplorare, il plastico stampato in 3D e la realtà aumentata.";
+---
+
+<BaseLayout descrizione={descrizione}>
+  <div class="contenitore">
+    <div class="introduzione">
+      <p class="introduzione__etichetta etichetta etichetta--accento">
+        Galleria{opere.length > 0 && ` · ${conteggio}`}
+      </p>
+      {/* A capo sulla virgola: su schermi larghi il titolo sta su due righe, una per frase. */}
+      <h1 class="introduzione__titolo">
+        Edifici rilevati dal cielo, <br />stampati in scala.
+      </h1>
+      <p class="introduzione__testo sottotitolo">
+        Fotografiamo gli edifici con il drone, ne ricaviamo un modello&nbsp;3D da esplorare e ne stampiamo il
+        plastico in&nbsp;3D. Con il telefono puoi vederlo anche nella tua stanza, in realtà aumentata.
+      </p>
+    </div>
+
+    {
+      opere.length > 0 ? (
+        <ul class="galleria" role="list">
+          {opere.map((opera) => (
+            <li>
+              <CardOpera opera={opera} />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p class="galleria-vuota sottotitolo">La galleria è in allestimento.</p>
+      )
+    }
+  </div>
+</BaseLayout>
+
+<style>
+  /* --- Intestazione ------------------------------------------------------- */
+
+  .introduzione {
+    padding-block: var(--spazio-8) var(--spazio-7);
+  }
+
+  .introduzione__etichetta {
+    margin-bottom: var(--spazio-4);
+  }
+
+  .introduzione__titolo {
+    max-width: 20ch;
+  }
+
+  .introduzione__testo {
+    max-width: var(--larghezza-testo);
+    margin-top: var(--spazio-5);
+  }
+
+  /* --- Griglia delle opere ------------------------------------------------- */
+
+  /* Un filetto separa l'intestazione dal catalogo; poi 1, 2 o 3 colonne. */
+  .galleria {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--spazio-7) var(--spazio-6);
+    margin: 0;
+    padding: var(--spazio-6) 0 0;
+    list-style: none;
+    border-top: var(--filo);
+  }
+
+  .galleria-vuota {
+    padding-top: var(--spazio-6);
+    border-top: var(--filo);
+  }
+
+  @media (min-width: 40rem) {
+    .galleria {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .introduzione {
+      padding-block: var(--spazio-9) var(--spazio-8);
+    }
+
+    .introduzione__testo {
+      margin-top: var(--spazio-6);
+    }
+
+    .galleria {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--spazio-8) var(--spazio-7);
+      padding-top: var(--spazio-7);
+    }
+  }
+</style>

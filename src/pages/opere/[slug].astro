@@ -1,0 +1,311 @@
+---
+// Pagina di dettaglio di un'opera: /opere/<slug>/ (è l'indirizzo del QR stampato sul plastico,
+// non cambiarne la forma). Una tavola divisa in due, modello digitale e plastico stampato,
+// e sotto la realtà aumentata.
+import type { GetStaticPaths } from 'astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ModelloDigitale from '../../components/ModelloDigitale.astro';
+import Turntable from '../../components/Turntable.astro';
+import PulsanteAR from '../../components/PulsanteAR.astro';
+import { getOpere, type Opera } from '../../lib/opere';
+import { url } from '../../lib/url';
+
+export const getStaticPaths = (() =>
+  getOpere().map((opera) => ({ params: { slug: opera.slug }, props: { opera } }))) satisfies GetStaticPaths;
+
+interface Props {
+  opera: Opera;
+}
+
+const { opera } = Astro.props;
+
+/** Accorcia un testo all'ultima parola intera entro `massimo` caratteri, con i puntini. */
+function accorcia(testo: string, massimo: number): string {
+  if (testo.length <= massimo) return testo;
+  const taglio = testo.slice(0, massimo - 1);
+  const spazio = taglio.lastIndexOf(' ');
+  return `${(spazio > massimo * 0.6 ? taglio.slice(0, spazio) : taglio).replace(/[\s,;:.–—-]+$/, '')}…`;
+}
+
+// Descrizione per motori di ricerca e anteprime: entro ~160 caratteri, la località resta sempre.
+const coda = ` — ${opera.localita}`;
+const descrizione = `${accorcia(opera.descrizione, 160 - coda.length)}${coda}`;
+
+const dueCifre = (n: number) => String(n).padStart(2, '0');
+
+// La didascalia del plastico dice che cosa si sta guardando davvero.
+const didascaliaPlastico = {
+  turntable: 'Vista a\u00a0360°',
+  foto: 'Fotografia',
+  segnaposto: 'In lavorazione',
+}[opera.plastico.tipo];
+
+const opere = getOpere();
+const precedente = opere[opera.numero - 2];
+const successiva = opere[opera.numero];
+---
+
+<BaseLayout
+  titolo={opera.nome}
+  descrizione={descrizione}
+  immagine={opera.immagineSocial}
+  immagineAlt={`Modello 3D di ${opera.nome}, ${opera.localita}`}
+  tipo="article"
+>
+  {opera.poster && <link slot="head" rel="preload" as="image" href={opera.poster} fetchpriority="high" />}
+
+  <article class="contenitore opera">
+    <a class="etichetta opera__ritorno" href={url('')}>← Galleria</a>
+
+    <header class="opera__intestazione">
+      <p class="etichetta etichetta--accento">Opera {opera.numeroEtichetta} / {dueCifre(opera.totale)}</p>
+      <h1>{opera.nome}</h1>
+      <p class="etichetta">
+        {opera.localita}
+        {opera.anno && <> · {opera.anno}</>}
+      </p>
+      <p class="sottotitolo opera__descrizione">{opera.descrizione}</p>
+    </header>
+
+    <div class="tavola">
+      <figure class="tavola__meta tavola__meta--modello">
+        <div class="tavola__riquadro">
+          <ModelloDigitale opera={opera} />
+        </div>
+        <figcaption class="etichetta tavola__didascalia">
+          <span>A · Modello digitale — Fotogrammetria da&nbsp;drone</span>
+          {
+            opera.modello && (
+              <span class="tavola__istruzioni">
+                Trascina per ruotare · <span class="solo-touch">pizzica per ingrandire</span>
+                <span class="solo-mouse">Ctrl + rotella per ingrandire</span>
+              </span>
+            )
+          }
+        </figcaption>
+      </figure>
+
+      <figure class="tavola__meta tavola__meta--plastico">
+        <div class="tavola__riquadro">
+          <Turntable plastico={opera.plastico} nome={opera.nome} />
+        </div>
+        <figcaption class="etichetta tavola__didascalia">
+          <span>B · Plastico stampato in&nbsp;3D — {didascaliaPlastico}</span>
+        </figcaption>
+      </figure>
+    </div>
+
+    <div class="opera__ar">
+      <PulsanteAR opera={opera} />
+    </div>
+
+    {
+      (precedente || successiva) && (
+        <nav class="scorri" aria-label="Altre opere">
+          {precedente && (
+            <a class="scorri__voce scorri__voce--precedente" href={precedente.pagina} rel="prev">
+              <span class="etichetta">← Opera precedente</span>
+              <span class="scorri__nome">{precedente.nome}</span>
+            </a>
+          )}
+          {successiva && (
+            <a class="scorri__voce scorri__voce--successiva" href={successiva.pagina} rel="next">
+              <span class="etichetta">Opera successiva →</span>
+              <span class="scorri__nome">{successiva.nome}</span>
+            </a>
+          )}
+        </nav>
+      )
+    }
+  </article>
+</BaseLayout>
+
+<style>
+  .opera {
+    padding-top: var(--spazio-5);
+  }
+
+  /* Alto 44px: bersaglio comodo col dito. */
+  .opera__ritorno {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    text-decoration: none;
+  }
+
+  .opera__ritorno:hover {
+    color: var(--petrolio-scuro);
+  }
+
+  /* --- Intestazione ---------------------------------------------------------------- */
+
+  .opera__intestazione {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spazio-3);
+    margin-block: var(--spazio-5) var(--spazio-6);
+  }
+
+  /* Un gradino sotto il titolo della home: su un portatile la tavola deve restare in vista. */
+  .opera__intestazione h1 {
+    margin-block: var(--spazio-1);
+    font-size: clamp(2.25rem, 5vw, 4rem);
+  }
+
+  .opera__descrizione {
+    max-width: var(--larghezza-testo);
+    margin-top: var(--spazio-2);
+  }
+
+  /* --- Tavola: modello e plastico ---------------------------------------------------
+     Su telefono i due riquadri sono impilati, ognuno con la sua cornice e la sua didascalia.
+     Da 48rem sono un'unica tavola 16:9 divisa a metà da un filetto verticale; la tavola
+     si restringe (allineata a sinistra, sulla colonna del testo) perché la sua altezza stia
+     nello schermo anche su monitor larghi e bassi. */
+
+  .tavola {
+    display: grid;
+    gap: var(--spazio-6);
+  }
+
+  .tavola__meta {
+    margin: 0;
+    min-width: 0;
+  }
+
+  .tavola__riquadro {
+    display: grid;
+    grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+    overflow: hidden;
+    border: var(--filo);
+    border-radius: var(--raggio);
+  }
+
+  .tavola__meta--modello .tavola__riquadro {
+    aspect-ratio: 4 / 5;
+    background: var(--carta-chiara);
+  }
+
+  .tavola__meta--plastico .tavola__riquadro {
+    aspect-ratio: 1 / 1;
+    background: var(--carta-scura);
+  }
+
+  /* Targhetta museale: la riga principale in tono più scuro, l'istruzione in secondo tono. */
+  .tavola__didascalia {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spazio-1);
+    margin-top: var(--spazio-3);
+    color: var(--testo-secondario-scuro);
+  }
+
+  /* Lo zoom si fa col pizzico sul telefono e con Ctrl + rotella al computer (la rotella da sola
+     scorre la pagina: vedi rotellaPerLaPagina() in src/scripts/modello.ts). */
+  .solo-touch {
+    display: none;
+  }
+
+  @media (pointer: coarse) {
+    .solo-touch {
+      display: inline;
+    }
+
+    .solo-mouse {
+      display: none;
+    }
+  }
+
+  /* L'istruzione è una frase, non un'etichetta: in carattere di testo, piccolo. */
+  .tavola__istruzioni {
+    font-family: var(--font-testo);
+    font-size: 0.8125rem;
+    color: var(--testo-secondario);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  @media (min-width: 48rem) {
+    .tavola {
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      width: 100%;
+      width: min(100%, calc((100vh - 10rem) * 16 / 9));
+      width: min(100%, calc((100svh - 10rem) * 16 / 9));
+    }
+
+    /* Ogni metà è 8:9, quindi le due insieme fanno 16:9. Il filetto centrale è il bordo
+       destro della metà sinistra: niente spazio fra le due, è un'unica tavola. */
+    .tavola__meta--modello .tavola__riquadro,
+    .tavola__meta--plastico .tavola__riquadro {
+      aspect-ratio: 8 / 9;
+    }
+
+    .tavola__meta--modello .tavola__riquadro {
+      border-radius: var(--raggio) 0 0 var(--raggio);
+    }
+
+    .tavola__meta--plastico .tavola__riquadro {
+      border-left: 0;
+      border-radius: 0 var(--raggio) var(--raggio) 0;
+    }
+
+    /* Stesso rientro dal bordo sinistro della propria metà, per entrambe le targhette. */
+    .tavola__didascalia {
+      padding-inline: var(--spazio-1) var(--spazio-4);
+    }
+  }
+
+  /* --- Realtà aumentata ------------------------------------------------------------- */
+
+  .opera__ar {
+    margin-top: var(--spazio-7);
+  }
+
+  /* --- Opera precedente / successiva ------------------------------------------------ */
+
+  .scorri {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spazio-5);
+    margin-top: var(--spazio-8);
+    padding-top: var(--spazio-5);
+    border-top: var(--filo);
+  }
+
+  .scorri__voce {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spazio-2);
+    color: var(--inchiostro);
+    text-decoration: none;
+  }
+
+  .scorri__voce--successiva {
+    grid-column: 2;
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .scorri__nome {
+    font-family: var(--font-titoli);
+    font-weight: 600;
+    font-size: var(--titolo-m);
+    line-height: var(--interlinea-titoli);
+    letter-spacing: -0.01em;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+    transition: text-decoration-color var(--durata) ease;
+  }
+
+  .scorri__voce:hover .scorri__nome,
+  .scorri__voce:focus-visible .scorri__nome {
+    text-decoration-color: currentColor;
+  }
+
+  .scorri__voce:hover .etichetta {
+    color: var(--petrolio);
+  }
+</style>

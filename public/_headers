@@ -1,0 +1,18 @@
+# Intestazioni HTTP per Netlify e Cloudflare Pages (GitHub Pages le ignora).
+
+# Tipi MIME corretti per i modelli 3D: iOS apre AR Quick Look solo se l'USDZ
+# è servito come model/vnd.usdz+zip.
+/*.glb
+  Content-Type: model/gltf-binary
+  Cache-Control: public, max-age=604800
+/*.usdz
+  Content-Type: model/vnd.usdz+zip
+  Cache-Control: public, max-age=604800
+
+# Frame del plastico e immagini delle opere: raramente cambiano.
+/opere/*
+  Cache-Control: public, max-age=604800
+
+# Risorse di Astro con hash nel nome: cache lunga.
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable

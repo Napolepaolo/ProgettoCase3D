@@ -1,0 +1,223 @@
+---
+// Scheda di un'opera nella galleria: anteprima quadrata (il poster del modello)
+// e, sotto, una targhetta come quelle di un museo: numero, nome, località e anno.
+//
+// Tutta la scheda è cliccabile con un solo link, quello sul nome (pattern
+// "stretched link": uno pseudo-elemento del link si allarga a coprire la scheda).
+// Chi usa uno screen reader sente come testo del link solo il nome dell'opera;
+// per questo l'immagine ha alt vuoto: descriverla ("Modello 3D di …") ripeterebbe
+// il nome subito prima del link, senza aggiungere informazioni.
+import type { Opera } from '../lib/opere';
+
+interface Props {
+  opera: Opera;
+}
+
+const { opera } = Astro.props;
+
+/** Lato in pixel dei poster (vedi CONTRATTI): serve solo a riservare lo spazio prima del caricamento. */
+const LATO_POSTER = 1600;
+
+// Le prime tre schede stanno sopra la piega (su desktop): niente caricamento differito,
+// e la prima è con ogni probabilità l'elemento più grande della pagina (LCP).
+const sopraLaPiega = opera.numero <= 3;
+const luogo = opera.anno ? `${opera.localita} · ${opera.anno}` : opera.localita;
+---
+
+<article class="scheda">
+  <div class="scheda__anteprima">
+    {
+      opera.poster ? (
+        <img
+          class="scheda__poster"
+          src={opera.poster}
+          alt=""
+          width={LATO_POSTER}
+          height={LATO_POSTER}
+          loading={sopraLaPiega ? 'eager' : 'lazy'}
+          decoding="async"
+          fetchpriority={opera.numero === 1 ? 'high' : undefined}
+        />
+      ) : (
+        <div class="scheda__segnaposto" aria-hidden="true">
+          {/* Un plastico stilizzato a filetti: volume a due falde su una base. */}
+          <svg class="scheda__disegno" viewBox="-42 -33 94 82" fill="none">
+            <path class="scheda__base" d="M0 -8 L48.5 20 L10.4 42 L-38.1 14 Z" />
+            <path class="scheda__base-lato" d="M-38.1 14 L10.4 42 L10.4 45 L-38.1 17 Z" />
+            <path class="scheda__base-lato" d="M10.4 42 L48.5 20 L48.5 23 L10.4 45 Z" />
+            <path class="scheda__muro" d="M-24.2 14 L10.4 34 L10.4 8 L-24.2 -12 Z" />
+            <path class="scheda__muro" d="M10.4 34 L34.6 20 L34.6 -6 L22.5 -9 L10.4 8 Z" />
+            <path class="scheda__tetto" d="M-24.2 -12 L10.4 8 L22.5 -9 L-12.1 -29 Z" />
+            <path class="scheda__tetto" d="M-12.1 -29 L22.5 -9 L34.6 -6 L0 -26 Z" />
+          </svg>
+          <span class="etichetta">Anteprima in preparazione</span>
+        </div>
+      )
+    }
+  </div>
+
+  <div class="scheda__targhetta">
+    <p class="scheda__numero etichetta etichetta--accento">
+      <span class="solo-lettori">Opera </span>{opera.numeroEtichetta}
+    </p>
+    <h2 class="scheda__nome">
+      <a class="scheda__link" href={opera.pagina}>{opera.nome}</a>
+    </h2>
+    <p class="scheda__luogo etichetta">{luogo}</p>
+  </div>
+</article>
+
+<style>
+  /* Riferimento per il link "stirato": nessun altro antenato del link deve essere posizionato. */
+  .scheda {
+    position: relative;
+  }
+
+  /* --- Anteprima ---------------------------------------------------------- */
+
+  .scheda__anteprima {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    background: var(--carta-chiara);
+    border: var(--filo);
+    border-radius: var(--raggio);
+  }
+
+  /* Velo per l'hover: scurisce appena l'anteprima (il poster è opaco, lo sfondo da solo non si vedrebbe). */
+  .scheda__anteprima::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--inchiostro);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--durata) ease;
+  }
+
+  .scheda__poster {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .scheda__segnaposto {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spazio-5);
+    height: 100%;
+    padding: var(--spazio-5);
+    text-align: center;
+  }
+
+  .scheda__disegno {
+    width: 42%;
+    height: auto;
+    overflow: visible;
+  }
+
+  /* Tratti da 1px a qualsiasi dimensione: la base in tono filetto, il volume più deciso. */
+  .scheda__disegno path {
+    stroke-width: 1;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .scheda__base {
+    fill: var(--carta-chiara);
+    stroke: var(--filetto);
+  }
+
+  .scheda__base-lato {
+    fill: var(--carta-scura);
+    stroke: var(--filetto);
+  }
+
+  .scheda__muro {
+    fill: var(--carta-chiara);
+    stroke: var(--testo-secondario);
+  }
+
+  .scheda__tetto {
+    fill: var(--carta-scura);
+    stroke: var(--testo-secondario);
+  }
+
+  /* --- Targhetta ---------------------------------------------------------- */
+
+  /* Numero a sinistra, in una colonna fissa: i nomi restano allineati da una scheda all'altra. */
+  .scheda__targhetta {
+    display: grid;
+    grid-template-columns: 2.75rem minmax(0, 1fr);
+    align-items: baseline;
+    column-gap: var(--spazio-2);
+    row-gap: var(--spazio-2);
+    margin-top: var(--spazio-4);
+  }
+
+  .scheda__numero {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .scheda__nome {
+    grid-column: 2;
+    grid-row: 1;
+    font-size: clamp(1.25rem, 1.9vw, 1.5rem);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+
+  .scheda__luogo {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .scheda__link {
+    color: var(--inchiostro);
+    text-decoration-line: none;
+    text-decoration-color: var(--petrolio);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+  }
+
+  /* Il link copre l'intera scheda: un solo bersaglio, grande, per mouse e dita. */
+  .scheda__link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--raggio);
+  }
+
+  /* --- Stati: hover e focus ------------------------------------------------ */
+
+  @media (hover: hover) {
+    .scheda:hover .scheda__anteprima::after {
+      opacity: 0.045;
+    }
+
+    .scheda:hover .scheda__link {
+      color: var(--inchiostro);
+      text-decoration-line: underline;
+    }
+  }
+
+  /* Il contorno di focus avvolge tutta la scheda, non solo il nome. */
+  .scheda__link:focus-visible {
+    outline: none;
+    text-decoration-line: underline;
+  }
+
+  .scheda__link:focus-visible::after {
+    outline: 2px solid var(--petrolio);
+    outline-offset: var(--spazio-2);
+  }
+
+  .scheda:has(.scheda__link:focus-visible) .scheda__anteprima::after {
+    opacity: 0.045;
+  }
+</style>

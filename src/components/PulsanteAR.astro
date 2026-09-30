@@ -1,0 +1,230 @@
+---
+// Area della realtà aumentata sotto il riquadro: pulsante "Vedi nella tua stanza" sui
+// dispositivi con AR, codice QR verso la stessa pagina altrove. Quale dei due mostrare lo
+// decide prima il CSS e poi src/scripts/ar.ts (i due stati occupano lo stesso spazio).
+import QRCode from 'qrcode';
+import type { Opera } from '../lib/opere';
+
+interface Props {
+  opera: Opera;
+}
+
+const { opera } = Astro.props;
+
+// Stesso id assegnato al <model-viewer> in ModelloDigitale.astro.
+const idModello = `modello-${opera.slug}`;
+
+// QR generato in build come SVG in linea. Margine zero: la zona di rispetto la dà la cornice.
+// Il colore scuro qui è un ripiego: a schermo lo decide il CSS (var(--inchiostro)).
+const opzioniQr = {
+  type: 'svg',
+  errorCorrectionLevel: 'M',
+  margin: 0,
+  color: { dark: '#1c2b31', light: '#0000' },
+} as const;
+const svgQr = opera.modello ? await QRCode.toString(opera.paginaAssoluta, opzioniQr) : '';
+const indirizzoLeggibile = opera.paginaAssoluta.replace(/^https?:\/\//, '');
+// Se l'indirizzo va a capo, meglio dopo una "/" che dentro lo slug (dove il trattino confonde).
+const partiIndirizzo = indirizzoLeggibile.split(/(?<=\/)/);
+const scala = new Intl.NumberFormat('it-IT', { maximumFractionDigits: 1 }).format(opera.scalaAR);
+---
+
+{
+  opera.modello ? (
+    <section
+      class="ar"
+      aria-label="Realtà aumentata"
+      data-ar
+      data-modello={idModello}
+      data-pagina={opera.paginaAssoluta}
+      data-qr={JSON.stringify(opzioniQr)}
+    >
+      <div class="ar__stato ar__stato--pulsante">
+        <button type="button" class="pulsante pulsante--pieno ar__pulsante" data-ar-pulsante>
+          {/* Un cubo appoggiato su un piano. */}
+          <svg class="ar__icona" viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
+            <path d="M12 3 18 6v7l-6 3-6-3V6l6-3Z" />
+            <path d="M6 6l6 3 6-3M12 9v7" />
+            <path d="M2.5 16.5 12 21.25l9.5-4.75" />
+          </svg>
+          <span data-ar-testo>Vedi nella tua stanza</span>
+        </button>
+        <p class="etichetta ar__scala">Scala da plastico · base circa {scala} cm</p>
+      </div>
+
+      <div class="ar__stato ar__stato--qr">
+        <div
+          class="ar__codice"
+          role="img"
+          aria-label={`Codice QR che apre questa pagina sul telefono: ${indirizzoLeggibile}`}
+          data-ar-codice
+          set:html={svgQr}
+        />
+        <div class="ar__invito">
+          <p class="ar__frase">Inquadra con il telefono per vederlo nella tua stanza</p>
+          <p class="etichetta ar__indirizzo" data-ar-indirizzo>
+            {partiIndirizzo.map((parte, i) => (i > 0 ? <><wbr />{parte}</> : parte))}
+          </p>
+        </div>
+      </div>
+
+      <p class="ar__messaggio" role="status" data-ar-messaggio />
+    </section>
+  ) : (
+    <p class="etichetta ar ar__assente">La realtà aumentata sarà disponibile quando il modello digitale sarà pronto.</p>
+  )
+}
+
+<script>
+  import '../scripts/ar';
+</script>
+
+<style>
+  .ar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  /* --- Quale stato mostrare --------------------------------------------------------
+     Senza stato deciso dallo script: telefono e tablet (puntatore grossolano) → pulsante,
+     computer → QR. Poi data-stato="pulsante" | "qr" scritto da ar.ts ha l'ultima parola. */
+  .ar__stato--pulsante {
+    display: none;
+  }
+
+  @media (pointer: coarse) {
+    .ar:not([data-stato]) .ar__stato--pulsante {
+      display: flex;
+    }
+
+    .ar:not([data-stato]) .ar__stato--qr {
+      display: none;
+    }
+  }
+
+  .ar[data-stato='pulsante'] .ar__stato--pulsante {
+    display: flex;
+  }
+
+  .ar[data-stato='pulsante'] .ar__stato--qr {
+    display: none;
+  }
+
+  /* Modello non caricato: né pulsante né QR, resta il messaggio di ar.ts. */
+  .ar[data-stato='assente'] .ar__stato--pulsante,
+  .ar[data-stato='assente'] .ar__stato--qr {
+    display: none;
+  }
+
+  /* Su un telefono senza AR il QR non serve (non si inquadra il proprio schermo):
+     resta solo la nota di ar.ts che spiega perché e cosa fare. */
+  @media (pointer: coarse) {
+    .ar[data-stato='qr'] .ar__stato--qr {
+      display: none;
+    }
+  }
+
+  /* --- Pulsante --------------------------------------------------------------------- */
+
+  .ar__stato--pulsante {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spazio-3);
+    width: 100%;
+  }
+
+  .ar__pulsante {
+    width: 100%;
+    min-height: 3.5rem;
+    padding-inline: var(--spazio-6);
+    font-size: 0.8125rem;
+  }
+
+  @media (min-width: 48rem) {
+    .ar__pulsante {
+      width: min(100%, 26rem);
+    }
+  }
+
+  .ar__icona {
+    flex: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* --- QR ------------------------------------------------------------------------------ */
+
+  .ar__stato--qr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spazio-4) var(--spazio-6);
+    text-align: left;
+  }
+
+  .ar__codice {
+    flex: none;
+    width: 10rem;
+    /* Zona di rispetto attorno ai moduli, su carta chiara. */
+    padding: var(--spazio-4);
+    border: var(--filo);
+    border-radius: var(--raggio);
+    background: var(--carta-chiara);
+    color: var(--inchiostro);
+    box-sizing: content-box;
+  }
+
+  .ar__codice :global(svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* Il CSS vince sugli attributi di presentazione dell'SVG generato. */
+  .ar__codice :global(path) {
+    stroke: currentColor;
+  }
+
+  .ar__invito {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spazio-2);
+    max-width: 24rem;
+  }
+
+  .ar__frase {
+    font-family: var(--font-titoli);
+    font-weight: 400;
+    font-size: var(--corpo-grande);
+    line-height: 1.3;
+    color: var(--inchiostro);
+  }
+
+  .ar__indirizzo {
+    overflow-wrap: break-word;
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+
+  /* --- Messaggi -------------------------------------------------------------------------- */
+
+  /* Sempre presente (anche vuoto) perché gli screen reader annuncino i cambiamenti. */
+  .ar__messaggio {
+    max-width: var(--larghezza-testo);
+    font-size: var(--corpo-piccolo);
+    color: var(--testo-secondario-scuro);
+  }
+
+  .ar__messaggio:not(:empty) {
+    margin-top: var(--spazio-4);
+  }
+
+  .ar__assente {
+    display: block;
+  }
+</style>

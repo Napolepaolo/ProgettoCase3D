@@ -1,0 +1,143 @@
+---
+// Pagina 404. Astro la scrive come 404.html nella radice della build: Netlify,
+// Cloudflare Pages e GitHub Pages la servono da sole per qualsiasi indirizzo inesistente.
+// Viene mostrata anche in percorsi profondi, quindi tutti i link sono assoluti (url()).
+//
+// Il caso tipico è un QR stampato che punta a un'opera rinominata o ritirata:
+// per questo, oltre al ritorno alla galleria, elenca le opere esposte.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getOpere } from '../lib/opere';
+import { url } from '../lib/url';
+
+const opere = getOpere();
+---
+
+<BaseLayout titolo="Pagina non trovata" descrizione="La pagina cercata non esiste o l’indirizzo è cambiato." noindex>
+  <div class="contenitore">
+    <div class="avviso">
+      <p class="avviso__etichetta etichetta">Errore 404</p>
+      <h1>Pagina non trovata</h1>
+      <p class="avviso__testo sottotitolo">La pagina cercata non esiste, o l’indirizzo è cambiato.</p>
+
+      {
+        opere.length > 0 && (
+          <nav class="avviso__opere" aria-labelledby="opere-esposte">
+            <h2 id="opere-esposte" class="etichetta">
+              Opere in galleria
+            </h2>
+            <ul role="list">
+              {opere.map((opera) => (
+                <li>
+                  <a href={opera.pagina}>
+                    <span class="avviso__numero etichetta etichetta--accento">{opera.numeroEtichetta}</span>{' '}
+                    <span class="avviso__nome">{opera.nome}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )
+      }
+
+      <p class="avviso__ritorno">
+        <a class="etichetta etichetta--accento" href={url('')}>
+          <span aria-hidden="true">←</span> Torna alla galleria
+        </a>
+      </p>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  /* Stessa colonna stretta delle pagine in preparazione. */
+  .avviso {
+    max-width: var(--larghezza-testo);
+    padding-top: var(--spazio-8);
+  }
+
+  .avviso__etichetta {
+    margin-bottom: var(--spazio-4);
+  }
+
+  .avviso__testo {
+    margin-top: var(--spazio-5);
+  }
+
+  /* --- Elenco delle opere, come un indice di catalogo ---------------------- */
+
+  .avviso__opere {
+    margin-top: var(--spazio-7);
+  }
+
+  .avviso__opere h2 {
+    margin-bottom: var(--spazio-3);
+  }
+
+  .avviso__opere ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: var(--filo);
+  }
+
+  .avviso__opere li {
+    border-bottom: var(--filo);
+  }
+
+  .avviso__opere a {
+    display: grid;
+    grid-template-columns: 2.75rem minmax(0, 1fr);
+    align-items: baseline;
+    column-gap: var(--spazio-2);
+    padding-block: var(--spazio-3);
+    color: var(--inchiostro);
+    text-decoration: none;
+  }
+
+  .avviso__nome {
+    font-family: var(--font-titoli);
+    font-size: var(--corpo-grande);
+    line-height: 1.3;
+    text-decoration-color: var(--petrolio);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+  }
+
+  .avviso__opere a:hover .avviso__nome,
+  .avviso__opere a:focus-visible .avviso__nome {
+    text-decoration-line: underline;
+  }
+
+  /* --- Ritorno alla galleria ------------------------------------------------ */
+
+  .avviso__ritorno {
+    margin-top: var(--spazio-7);
+  }
+
+  /* Senza elenco di opere, il filetto separa comunque il ritorno dal testo. */
+  .avviso__testo + .avviso__ritorno {
+    padding-top: var(--spazio-5);
+    border-top: var(--filo);
+  }
+
+  /* Alto 44px: bersaglio comodo col dito. */
+  .avviso__ritorno a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    min-height: 2.75rem;
+    text-decoration: none;
+  }
+
+  .avviso__ritorno a:hover,
+  .avviso__ritorno a:focus-visible {
+    color: var(--petrolio-scuro);
+    text-decoration-line: underline;
+  }
+
+  @media (min-width: 64rem) {
+    .avviso {
+      padding-top: var(--spazio-9);
+    }
+  }
+</style>

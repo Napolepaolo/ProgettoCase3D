@@ -1,0 +1,251 @@
+---
+// Riquadro del modello digitale: <model-viewer> navigabile, oppure il segnaposto
+// "Modello in lavorazione" se il GLB non esiste ancora. Riempie il contenitore genitore:
+// le proporzioni del riquadro le decide la pagina.
+import path from 'node:path';
+import type { Opera } from '../lib/opere';
+import { leggiIntestazioneGlb, toneMappingPerGlb } from '../../scripts/lib/intestazione-glb.mjs';
+
+interface Props {
+  opera: Opera;
+}
+
+const { opera } = Astro.props;
+const { modello, poster } = opera;
+
+
+// Intestazione JSON del GLB, letta in build senza caricare geometria e texture: serve a sapere
+// se il modello usa meshopt, se è unlit e come impostare il tone mapping.
+const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
+const gltf = modello
+  ? leggiIntestazioneGlb(path.join(process.cwd(), 'public', decodeURI(modello.glb.slice(base.length))))
+  : null;
+const estensioni: string[] = gltf?.extensionsUsed ?? [];
+// Fotogrammetria con la luce "cotta" nella texture (materiale emissivo di converti-modello.mjs):
+// tone mapping spento per colori fedeli alle foto. Stessa regola usata da scripts/poster.mjs.
+const toneMapping = toneMappingPerGlb(gltf);
+const usaMeshopt = estensioni.some((e) => e === 'EXT_meshopt_compression' || e === 'KHR_meshopt_compression');
+
+// Senza ios-src model-viewer genera l'USDZ per iPhone con l'USDZExporter di three.js, che esporta
+// solo i MeshStandardMaterial: un GLB unlit (converti-modello.mjs --unlit) diventerebbe una
+// scena VUOTA in Quick Look. In quel caso niente AR su iOS finché non c'è l'USDZ.
+const senzaQuickLook = modello !== null && modello.usdz === null && estensioni.includes('KHR_materials_unlit');
+if (senzaQuickLook) {
+  console.warn(
+    `[modello] "${opera.slug}": GLB unlit senza USDZ, su iPhone e iPad la realtà aumentata è disattivata. ` +
+      'Aggiungi in data/opere.json il campo "usdz" con un file fatto, per esempio, con Reality Converter.',
+  );
+}
+
+// Stesso id usato da PulsanteAR.astro per trovare il visore.
+const idModello = `modello-${opera.slug}`;
+
+// Traduzioni dei testi per gli screen reader (model-viewer li ha solo in inglese).
+const a11y = JSON.stringify({
+  front: 'Vista frontale',
+  back: 'Vista posteriore',
+  left: 'Vista da sinistra',
+  right: 'Vista da destra',
+  'upper-front': 'Vista frontale dall’alto',
+  'upper-back': 'Vista posteriore dall’alto',
+  'upper-left': 'Vista da sinistra, dall’alto',
+  'upper-right': 'Vista da destra, dall’alto',
+  'lower-front': 'Vista frontale dal basso',
+  'lower-back': 'Vista posteriore dal basso',
+  'lower-left': 'Vista da sinistra, dal basso',
+  'lower-right': 'Vista da destra, dal basso',
+  'interaction-prompt': 'Usa il mouse, il tocco o le frecce della tastiera per ruotare il modello.',
+});
+---
+
+{
+  modello ? (
+    <div class="modello">
+      {/*
+        Il pulsante AR interno di model-viewer è soppresso con uno slot "ar-button" vuoto e
+        nascosto: l'AR si avvia dal pulsante "Vedi nella tua stanza" sotto il riquadro
+        (PulsanteAR.astro), che chiama activateAR() di questo elemento.
+      */}
+      <model-viewer
+        id={idModello}
+        data-modello
+        data-meshopt={usaMeshopt ? '' : undefined}
+        src={modello.glb}
+        ios-src={modello.usdz ?? undefined}
+        poster={poster ?? undefined}
+        alt={`Modello 3D navigabile di ${opera.nome}, ${opera.localita}`}
+        a11y={a11y}
+        camera-controls
+        touch-action="pan-y"
+        interaction-prompt="none"
+        camera-orbit="-30deg 65deg auto"
+        max-camera-orbit="auto 88deg auto"
+        loading="lazy"
+        reveal="auto"
+        environment-image="neutral"
+        exposure="1"
+        tone-mapping={toneMapping ?? undefined}
+        shadow-intensity="1"
+        shadow-softness="1"
+        ar
+        ar-modes={senzaQuickLook ? 'webxr scene-viewer' : 'webxr scene-viewer quick-look'}
+        ar-placement="floor"
+        ar-scale="auto"
+      >
+        {
+          /*
+            Poster come immagine vera nello slot "poster": si vede subito, prima che arrivi il
+            JavaScript di model-viewer (l'attributo poster è solo uno sfondo nell'ombra DOM).
+            Il testo alternativo è già nell'alt del visore.
+          */
+          poster && (
+            <img
+              slot="poster"
+              class="modello__poster"
+              src={poster}
+              alt=""
+              width="1600"
+              height="1600"
+              decoding="async"
+              fetchpriority="high"
+            />
+          )
+        }
+        <span slot="ar-button" hidden />
+      </model-viewer>
+      <p class="modello__errore etichetta" role="status" data-modello-errore />
+    </div>
+  ) : (
+    <div class="modello segnaposto">
+      {/* Un edificio a filetti sotto l'orbita del drone: le pareti sono rilevate, il tetto è ancora da ricostruire. */}
+      <svg class="segnaposto__disegno" viewBox="12 4 176 124" fill="none" aria-hidden="true">
+        <g class="segnaposto__tratti">
+          <ellipse class="segnaposto__lieve segnaposto__orbita" cx="100" cy="26" rx="80" ry="14" />
+          <path class="segnaposto__lieve" d="M60 94 48 100 100 126 152 100 140 94" />
+          <path d="M60 100 100 120 140 100M60 100V74M100 120V94M140 100V74M60 74 100 94 140 74" />
+          <path class="segnaposto__da-rilevare" d="M100 94 120 67 140 74M120 67 80 47 60 74" />
+          <path class="segnaposto__vista" d="M169.3 33 120 67" />
+          <circle cx="24.8" cy="21.2" r="2.2" />
+          <circle cx="72.6" cy="12.8" r="2.2" />
+          <circle cx="140" cy="13.9" r="2.2" />
+          <circle cx="175.2" cy="21.2" r="2.2" />
+          <circle cx="30.7" cy="33" r="2.2" />
+          <circle class="segnaposto__drone" cx="169.3" cy="33" r="2.2" />
+        </g>
+      </svg>
+      <p class="etichetta">Modello in lavorazione</p>
+      <p class="sottotitolo segnaposto__testo">Il rilievo di quest’opera è in elaborazione.</p>
+    </div>
+  )
+}
+
+<script>
+  import '../scripts/modello';
+</script>
+
+<style>
+  .modello {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--carta-chiara);
+  }
+
+  model-viewer {
+    display: block;
+    width: 100%;
+    height: 100%;
+    /* In model-viewer 4.x il poster eredita lo sfondo dell'elemento (--poster-color non esiste più). */
+    background-color: var(--carta-chiara);
+    --progress-bar-color: var(--petrolio);
+    --progress-bar-height: 2px;
+  }
+
+  /* Il contorno di focus (petrolio, all'interno del riquadro) è nella shadow root: vedi stileFocus()
+     in src/scripts/modello.ts. */
+
+  .modello__poster {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .modello__errore {
+    position: absolute;
+    inset: auto var(--spazio-3) var(--spazio-3);
+    margin: 0;
+    text-align: center;
+    color: var(--inchiostro);
+    pointer-events: none;
+  }
+
+  .modello__errore:not(:empty) {
+    padding: var(--spazio-2) var(--spazio-3);
+    border: var(--filo);
+    border-radius: var(--raggio);
+    background: var(--carta-chiara);
+  }
+
+  /* --- Segnaposto (stesso linguaggio del plastico in lavorazione) --------------- */
+
+  .segnaposto {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spazio-3);
+    padding: var(--spazio-6) var(--spazio-5);
+    text-align: center;
+  }
+
+  .segnaposto__disegno {
+    width: min(70%, 20rem);
+    max-height: 50%;
+    margin-bottom: var(--spazio-3);
+  }
+
+  .segnaposto__tratti {
+    stroke: var(--testo-secondario);
+    stroke-width: 1;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Tratti a 1px a qualunque dimensione, anche a schermo intero. */
+  .segnaposto__tratti > * {
+    vector-effect: non-scaling-stroke;
+  }
+
+  .segnaposto__tratti circle {
+    fill: var(--carta-chiara);
+  }
+
+  .segnaposto__lieve {
+    stroke: var(--filetto);
+  }
+
+  .segnaposto__orbita {
+    stroke-dasharray: 3 4;
+  }
+
+  .segnaposto__da-rilevare {
+    stroke-opacity: 0.5;
+    stroke-dasharray: 2 3;
+  }
+
+  .segnaposto__vista {
+    stroke: var(--petrolio);
+    stroke-dasharray: 2 3;
+  }
+
+  .segnaposto__tratti .segnaposto__drone {
+    fill: var(--petrolio);
+    stroke: var(--petrolio);
+  }
+
+  .segnaposto__testo {
+    max-width: 22ch;
+  }
+</style>

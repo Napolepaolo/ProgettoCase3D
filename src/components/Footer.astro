@@ -1,0 +1,35 @@
+---
+// Piè di pagina minimale, come la chiusura di un catalogo.
+import { TERRITORIO } from '../lib/sito';
+
+const anno = new Date().getFullYear();
+---
+
+<footer class="piede">
+  <div class="contenitore piede__riga">
+    <p class="etichetta">
+      {TERRITORIO.split(' · ').map((luogo, i) => <>{i > 0 && ' '}<span class="piede__luogo">{i > 0 && '· '}{luogo}</span></>)}
+    </p>
+    <p class="etichetta">© {anno} <span class="nome-proprio">fareLAB</span></p>
+  </div>
+</footer>
+
+<style>
+  .piede {
+    margin-top: var(--spazio-9);
+    border-top: var(--filo);
+  }
+
+  .piede__riga {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--spazio-2) var(--spazio-5);
+    padding-block: var(--spazio-6);
+  }
+
+  /* "Sud-Est barese" non si spezza sul trattino, e il separatore va a capo con la voce che segue. */
+  .piede__luogo {
+    white-space: nowrap;
+  }
+</style>

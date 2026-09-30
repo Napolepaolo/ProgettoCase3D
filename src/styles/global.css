@@ -1,0 +1,303 @@
+/* =========================================================================
+   3D Building by fareLAB — sistema grafico
+   Identità della brochure fareLAB: carta calda, accento petrolio,
+   tipografia editoriale. Atmosfera da catalogo di mostra.
+   ========================================================================= */
+
+:root {
+  /* --- Colori ----------------------------------------------------------- */
+  --carta: #f3eee4;            /* sfondo */
+  --carta-chiara: #f8f5ee;     /* riquadro del modello digitale */
+  --carta-scura: #ebe5d8;      /* riquadro del plastico, superfici secondarie */
+  --inchiostro: #1c2b31;       /* testo principale */
+  --testo-secondario: #4f5b5c;
+  --testo-secondario-scuro: #3e4a4b;
+  --petrolio: #1f5c68;         /* accento: link, pulsanti, etichette */
+  --petrolio-scuro: #153f48;   /* hover dell'accento */
+  --filetto: #cfc6b5;          /* filetti e bordi da 1px */
+  --terracotta: #9a5524;       /* accento alternativo, con parsimonia */
+  --oliva: #2f4a3a;            /* accento alternativo, con parsimonia */
+  --su-accento: #ffffff;       /* testo sopra il petrolio */
+
+  /* --- Font ------------------------------------------------------------- */
+  --font-titoli: 'Fraunces Variable', 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-testo: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* --- Scala tipografica ------------------------------------------------ */
+  --corpo-mono: 0.75rem;                              /* etichette e didascalie */
+  --corpo-piccolo: 0.9375rem;
+  --corpo: 1.0625rem;                                 /* 17px, testo corrente */
+  --corpo-grande: clamp(1.125rem, 1.6vw, 1.3125rem);  /* sottotitoli, descrizioni */
+  --titolo-m: clamp(1.375rem, 2.2vw, 1.75rem);
+  --titolo-l: clamp(2rem, 4.2vw, 3.25rem);
+  --titolo-xl: clamp(2.5rem, 6.5vw, 5rem);
+
+  --interlinea-titoli: 1.08;
+  --interlinea-testo: 1.6;
+  --spaziatura-mono: 0.1em;
+
+  /* --- Spazi ------------------------------------------------------------ */
+  --spazio-1: 0.25rem;
+  --spazio-2: 0.5rem;
+  --spazio-3: 0.75rem;
+  --spazio-4: 1rem;
+  --spazio-5: 1.5rem;
+  --spazio-6: 2rem;
+  --spazio-7: 3rem;
+  --spazio-8: 4.5rem;
+  --spazio-9: 7rem;
+
+  /* --- Impaginazione ---------------------------------------------------- */
+  --larghezza-max: 80rem;
+  --larghezza-testo: 38rem;
+  --margine-laterale: clamp(1rem, 4vw, 3rem);
+  --filo: 1px solid var(--filetto);
+  --raggio: 2px;               /* angoli quasi vivi, da stampa */
+  --durata: 180ms;
+}
+
+/* --- Base -------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--carta);
+  color: var(--inchiostro);
+  font-family: var(--font-testo);
+  font-size: var(--corpo);
+  line-height: var(--interlinea-testo);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+main {
+  flex: 1 0 auto;
+}
+
+img,
+svg,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-family: var(--font-titoli);
+  font-weight: 600;
+  line-height: var(--interlinea-titoli);
+  color: var(--inchiostro);
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: var(--titolo-xl);
+  letter-spacing: -0.025em;
+}
+
+h2 {
+  font-size: var(--titolo-l);
+  letter-spacing: -0.02em;
+}
+
+h3 {
+  font-size: var(--titolo-m);
+  letter-spacing: -0.01em;
+}
+
+p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+a {
+  color: var(--petrolio);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  transition: color var(--durata) ease;
+}
+
+a:hover {
+  color: var(--petrolio-scuro);
+}
+
+strong,
+b {
+  font-weight: 600;
+}
+
+hr {
+  border: 0;
+  border-top: var(--filo);
+  margin: 0;
+}
+
+::selection {
+  background: var(--petrolio);
+  color: var(--su-accento);
+}
+
+:focus-visible {
+  outline: 2px solid var(--petrolio);
+  outline-offset: 3px;
+}
+
+/* --- Utilità ------------------------------------------------------------ */
+
+/** Contenitore centrato con margini laterali. */
+.contenitore {
+  width: 100%;
+  max-width: var(--larghezza-max);
+  margin-inline: auto;
+  padding-inline: var(--margine-laterale);
+}
+
+/** Etichetta mono maiuscola: località, anno, numerazione "01 / 02", didascalie. */
+.etichetta {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: var(--corpo-mono);
+  line-height: 1.4;
+  letter-spacing: var(--spaziatura-mono);
+  text-transform: uppercase;
+  color: var(--testo-secondario);
+}
+
+.etichetta--accento {
+  color: var(--petrolio);
+}
+
+/** Nomi propri dentro le etichette maiuscole: "fareLAB" resta scritto così. */
+.nome-proprio {
+  text-transform: none;
+}
+
+/** Sottotitolo editoriale in Fraunces 400. */
+.sottotitolo {
+  font-family: var(--font-titoli);
+  font-weight: 400;
+  font-size: var(--corpo-grande);
+  line-height: 1.35;
+  letter-spacing: -0.005em;
+  color: var(--testo-secondario-scuro);
+}
+
+/** Testo secondario. */
+.testo-secondario {
+  color: var(--testo-secondario);
+}
+
+/** Nasconde visivamente ma lascia leggibile agli screen reader. */
+.solo-lettori {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/** Link "Salta al contenuto" visibile solo con la tastiera. */
+.salta-al-contenuto {
+  position: absolute;
+  left: var(--spazio-4);
+  top: var(--spazio-4);
+  z-index: 100;
+  padding: var(--spazio-2) var(--spazio-4);
+  background: var(--inchiostro);
+  color: var(--carta);
+  font-family: var(--font-mono);
+  font-size: var(--corpo-mono);
+  letter-spacing: var(--spaziatura-mono);
+  text-transform: uppercase;
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+
+.salta-al-contenuto:focus {
+  transform: none;
+  color: var(--carta);
+}
+
+/* --- Pulsanti ------------------------------------------------------------ */
+
+/** Pulsante sobrio con filetto (azioni secondarie). */
+.pulsante {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spazio-3);
+  min-height: 2.75rem;
+  padding: var(--spazio-3) var(--spazio-5);
+  border: 1px solid var(--petrolio);
+  border-radius: var(--raggio);
+  background: transparent;
+  color: var(--petrolio);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: var(--corpo-mono);
+  letter-spacing: var(--spaziatura-mono);
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color var(--durata) ease,
+    color var(--durata) ease,
+    border-color var(--durata) ease;
+}
+
+.pulsante:hover {
+  border-color: var(--petrolio-scuro);
+  color: var(--petrolio-scuro);
+}
+
+/** Pulsante pieno in petrolio: nel sito è usato SOLO per "Vedi nella tua stanza". */
+.pulsante--pieno {
+  background: var(--petrolio);
+  color: var(--su-accento);
+}
+
+.pulsante--pieno:hover {
+  background: var(--petrolio-scuro);
+  color: var(--su-accento);
+}
+
+.pulsante:disabled,
+.pulsante[aria-disabled='true'] {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

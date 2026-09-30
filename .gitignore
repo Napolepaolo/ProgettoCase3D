@@ -1,0 +1,15 @@
+# dipendenze e build
+node_modules/
+dist/
+.astro/
+.cache/
+
+# sorgenti pesanti di fotogrammetria (OBJ/MTL/texture originali): non vanno nel repository
+sorgenti/*
+!sorgenti/LEGGIMI.md
+
+# sistema
+.DS_Store
+*.log
+.env
+.env.*
