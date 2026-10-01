@@ -51,6 +51,15 @@ async function collega(tavola: HTMLElement) {
     if (source === 'user-interaction') plastico.impostaAngolo(angoloDalModello());
   });
 
+  // Pulsanti della vista (src/scripts/modello.ts): contano come un gesto dell'utente. La vista
+  // iniziale cambia anche l'azimut: il plastico la segue.
+  visore.addEventListener('3db:comando-camera', (evento) => {
+    const { azimutGradi } = (evento as CustomEvent<{ azimutGradi?: number }>).detail;
+    plastico.impostaAngolo(
+      azimutGradi === undefined || Number.isNaN(azimutGradi) ? plastico.angoloAttuale : -azimutGradi + allineamento,
+    );
+  });
+
   // Plastico → modello: trascinamento, inerzia, tastiera e rotazione automatica.
   plastico.addEventListener('turntable-rotazione', (evento) => {
     giraModello((evento as CustomEvent<{ angolo: number }>).detail.angolo);

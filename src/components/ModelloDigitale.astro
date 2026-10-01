@@ -79,7 +79,9 @@ const a11y = JSON.stringify({
         touch-action="pan-y"
         interaction-prompt="none"
         camera-orbit="-30deg 65deg auto"
+        min-camera-orbit="auto 10deg auto"
         max-camera-orbit="auto 88deg auto"
+        min-field-of-view="12deg"
         loading="lazy"
         reveal="auto"
         environment-image="neutral"
@@ -114,6 +116,28 @@ const a11y = JSON.stringify({
         <span slot="ar-button" hidden />
       </model-viewer>
       <p class="modello__errore etichetta" role="status" data-modello-errore />
+      {/*
+        Comandi della vista: alzare/abbassare il punto di vista e lo zoom, uguali su telefono e
+        computer (sul telefono il trascinamento verticale resta allo scorrimento della pagina).
+        Nascosti finché il modello non è caricato: li mostra src/scripts/modello.ts.
+      */}
+      <div class="comandi" role="group" aria-label="Comandi della vista 3D" data-comandi hidden>
+        <button type="button" class="comandi__tasto" data-comando="su" aria-label="Alza il punto di vista" title="Alza il punto di vista">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6" /></svg>
+        </button>
+        <button type="button" class="comandi__tasto" data-comando="giu" aria-label="Abbassa il punto di vista" title="Abbassa il punto di vista">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+        </button>
+        <button type="button" class="comandi__tasto comandi__tasto--stacco" data-comando="avvicina" aria-label="Ingrandisci" title="Ingrandisci">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6v12M6 12h12" /></svg>
+        </button>
+        <button type="button" class="comandi__tasto" data-comando="allontana" aria-label="Riduci" title="Riduci">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12" /></svg>
+        </button>
+        <button type="button" class="comandi__tasto comandi__tasto--stacco" data-comando="iniziale" aria-label="Torna alla vista iniziale" title="Torna alla vista iniziale">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12a7 7 0 1 0 2.05-4.95M5 4.5V9h4.5" /></svg>
+        </button>
+      </div>
     </div>
   ) : (
     <div class="modello segnaposto">
@@ -170,6 +194,75 @@ const a11y = JSON.stringify({
     width: 100%;
     height: 100%;
     object-fit: contain;
+  }
+
+  /* --- Comandi della vista --------------------------------------------------------- */
+
+  .comandi {
+    position: absolute;
+    right: var(--spazio-3);
+    bottom: var(--spazio-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spazio-1);
+  }
+
+  .comandi[hidden] {
+    display: none;
+  }
+
+  .comandi__tasto {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border: var(--filo);
+    border-radius: var(--raggio);
+    background: var(--carta-chiara);
+    background: color-mix(in srgb, var(--carta-chiara) 90%, transparent);
+    color: var(--inchiostro);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition:
+      border-color var(--durata) ease,
+      color var(--durata) ease;
+  }
+
+  /* Un piccolo stacco fra i gruppi: punto di vista, zoom, vista iniziale. */
+  .comandi__tasto--stacco {
+    margin-top: var(--spazio-2);
+  }
+
+  .comandi__tasto svg {
+    width: 1.125rem;
+    height: 1.125rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .comandi__tasto:focus-visible {
+    outline: 2px solid var(--petrolio);
+    outline-offset: 1px;
+  }
+
+  @media (hover: hover) {
+    .comandi__tasto:hover {
+      border-color: var(--petrolio);
+      color: var(--petrolio);
+    }
+  }
+
+  /* Col dito: bersagli da 44px. */
+  @media (pointer: coarse) {
+    .comandi__tasto {
+      width: 2.75rem;
+      height: 2.75rem;
+    }
   }
 
   .modello__errore {

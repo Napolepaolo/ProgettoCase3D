@@ -439,8 +439,13 @@ abilitato): richiederebbe una piccola modifica a `src/lib/opere.ts` per accettar
   pagine `public/anteprima-sito.jpg` (rifatta con `npm run anteprima-sito`).
 - **Font** Fraunces, Instrument Sans e IBM Plex Mono ospitati dal sito stesso (niente richieste a
   Google Fonts: più veloce e senza problemi di privacy). Anche i decoder Draco sono locali.
+- **Comandi del modello:** oltre al trascinamento, una colonna di pulsanti in basso a destra:
+  alza / abbassa il punto di vista (da quasi a picco, come dal drone, fino all'altezza del suolo),
+  ingrandisci / riduci, torna alla vista iniziale. Tenendo premuto un pulsante il movimento continua.
+  Servono soprattutto sul telefono, dove il trascinamento verticale fa scorrere la pagina.
 - **Rotella del mouse:** sopra il modello fa scorrere la pagina come altrove; si ingrandisce con
-  Ctrl/⌘ + rotella, col pizzico sul trackpad o dopo aver cliccato il modello (sul telefono: pizzico).
+  Ctrl/⌘ + rotella, col pizzico sul trackpad, con i pulsanti o dopo aver cliccato il modello
+  (sul telefono: pizzico).
 - **Accessibilità:** testi alternativi, contrasti AA, navigazione da tastiera (il plastico ruota con
   le frecce, Maiusc per passi grandi, Inizio/Fine; la rotazione automatica si ferma quando ci si
   arriva con la tastiera), rispetto di "riduci movimento".

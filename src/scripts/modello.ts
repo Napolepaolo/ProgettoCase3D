@@ -117,6 +117,106 @@ function stileFocus(visore: HTMLElement) {
   radice.append(stile);
 }
 
+// --- Comandi della vista (alza/abbassa, zoom, vista iniziale) ----------------------
+
+/** Passo di un tocco su ↑/↓ (gradi di elevazione) e dello zoom (unità di model-viewer.zoom()). */
+const PASSO_ELEVAZIONE = 10;
+const PASSO_ZOOM = 2;
+/** Tenendo premuto un tasto il comando si ripete: attesa iniziale e intervallo (ms). */
+const RITARDO_RIPETIZIONE = 380;
+const INTERVALLO_RIPETIZIONE = 110;
+
+type Visore = HTMLElement & {
+  loaded: boolean;
+  cameraOrbit: string;
+  fieldOfView: string;
+  getCameraOrbit(): { theta: number; phi: number; radius: number };
+  zoom(passi: number): void;
+};
+
+/**
+ * Collega i pulsanti sotto il modello. L'elevazione si cambia sul "punto d'arrivo" dell'ultimo
+ * comando (se recente), non sulla posizione attuale ancora in movimento: tenendo premuto il tasto
+ * il movimento è continuo invece di rallentare a ogni passo.
+ * Ogni comando emette '3db:comando-camera' sul visore: src/scripts/sincronia.ts lo usa per
+ * fermare la rotazione automatica del plastico e, per la vista iniziale, per riallinearlo.
+ */
+function collegaComandi(visore: Visore) {
+  const comandi = visore.parentElement?.querySelector<HTMLElement>('[data-comandi]');
+  if (!comandi) return;
+  const orbitaIniziale = visore.getAttribute('camera-orbit') ?? 'auto auto auto';
+  let obiettivo: { phi: number; istante: number } | null = null;
+
+  const segnala = (azimutGradi?: number) =>
+    visore.dispatchEvent(new CustomEvent('3db:comando-camera', { detail: { azimutGradi } }));
+
+  const esegui = (comando: string) => {
+    if (!visore.loaded) return;
+    const orbita = visore.getCameraOrbit();
+    switch (comando) {
+      case 'su':
+      case 'giu': {
+        const recente = obiettivo && performance.now() - obiettivo.istante < 600;
+        const phi = (recente ? obiettivo!.phi : orbita.phi) + ((comando === 'su' ? -1 : 1) * PASSO_ELEVAZIONE * Math.PI) / 180;
+        // I limiti (min/max-camera-orbit) li applica model-viewer; qui si tiene l'obiettivo dentro.
+        const limitato = Math.min(Math.max(phi, (10 * Math.PI) / 180), (88 * Math.PI) / 180);
+        obiettivo = { phi: limitato, istante: performance.now() };
+        visore.cameraOrbit = `${orbita.theta}rad ${limitato}rad ${orbita.radius}m`;
+        segnala();
+        break;
+      }
+      case 'avvicina':
+      case 'allontana':
+        visore.zoom(comando === 'avvicina' ? PASSO_ZOOM : -PASSO_ZOOM);
+        segnala();
+        break;
+      case 'iniziale':
+        obiettivo = null;
+        visore.cameraOrbit = orbitaIniziale;
+        visore.fieldOfView = 'auto';
+        segnala(parseFloat(orbitaIniziale));
+        break;
+    }
+  };
+
+  let attesa = 0;
+  let ripetizione = 0;
+  let ripetuto = false;
+  const ferma = () => {
+    clearTimeout(attesa);
+    clearInterval(ripetizione);
+  };
+
+  comandi.addEventListener('pointerdown', (e) => {
+    const tasto = (e.target as Element).closest<HTMLElement>('[data-comando]');
+    const comando = tasto?.dataset.comando;
+    if (!comando || comando === 'iniziale' || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    ripetuto = false;
+    ferma();
+    attesa = window.setTimeout(() => {
+      ripetuto = true;
+      esegui(comando);
+      ripetizione = window.setInterval(() => esegui(comando), INTERVALLO_RIPETIZIONE);
+    }, RITARDO_RIPETIZIONE);
+  });
+  for (const tipo of ['pointerup', 'pointercancel', 'pointerleave'] as const) comandi.addEventListener(tipo, ferma);
+
+  // Un tocco (o Invio/Spazio da tastiera) = un passo; dopo una pressione lunga il click finale non conta.
+  comandi.addEventListener('click', (e) => {
+    const comando = (e.target as Element).closest<HTMLElement>('[data-comando]')?.dataset.comando;
+    if (!comando) return;
+    if (ripetuto) {
+      ripetuto = false;
+      return;
+    }
+    esegui(comando);
+  });
+
+  const mostra = () => (comandi.hidden = false);
+  if (visore.loaded) mostra();
+  else visore.addEventListener('load', mostra, { once: true });
+}
+
 const visori = Array.from(document.querySelectorAll<HTMLElement>('model-viewer[data-modello]'));
 
 for (const visore of visori) {
@@ -144,6 +244,7 @@ if (visori.length > 0) {
       ModelViewerElement.mapURLs((indirizzo) => decoderLocali.get(indirizzo) ?? indirizzo);
       // customElements.define() ha già fatto l'upgrade degli elementi presenti.
       visori.forEach(stileFocus);
+      visori.forEach((visore) => collegaComandi(visore as Visore));
     })
     .catch(() => {
       // Pacchetto non scaricato (rete assente, blocco): resta il poster con l'avviso.
