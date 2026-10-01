@@ -17,6 +17,10 @@
 //
 // La logica "pura" (angoli, ordine di caricamento, inerzia) è esportata come funzioni
 // indipendenti dal DOM, così si può provare anche con node.
+//
+// Rotazione collegata al modello 3D (src/scripts/sincronia.ts): a ogni cambio d'angolo
+// l'elemento emette 'turntable-rotazione' (detail: { angolo, automatica }); impostaAngolo()
+// lo porta a un angolo deciso da fuori senza riemettere l'evento (niente rimbalzi).
 
 // --- Parametri ------------------------------------------------------------
 
@@ -259,6 +263,8 @@ class TurntablePlastico extends HTMLElement {
   /** Angolo reale, in gradi: cresce quando l'oggetto gira verso destra. */
   private angolo = 0;
   private velocita = 0;
+  /** Ultimo angolo comunicato con 'turntable-rotazione' (o ricevuto da fuori). */
+  private angoloComunicato = Number.NaN;
   private autoRotazione = false;
   private interagito = false;
   private trascinamento: {
@@ -487,6 +493,45 @@ class TurntablePlastico extends HTMLElement {
     if (this.barra) this.barra.style.transform = `scaleX(${this.caricati / this.n})`;
   }
 
+  // --- Rotazione collegata (API pubblica) -------------------------------------------
+
+  /** Angolo attuale in gradi [0, 360): cresce quando l'oggetto gira verso destra. */
+  get angoloAttuale(): number {
+    return normalizzaAngolo(this.angolo);
+  }
+
+  /** true se l'utente ha già ruotato il plastico (o l'ha fatto girare il modello collegato). */
+  get toccato(): boolean {
+    return this.interagito;
+  }
+
+  /**
+   * Porta il plastico a un angolo deciso da fuori (es. dal modello 3D) senza emettere
+   * 'turntable-rotazione'. Con `interazione` (predefinito) conta come un gesto dell'utente:
+   * ferma la rotazione automatica e fa partire il caricamento dei frame. Se l'utente sta
+   * trascinando proprio il plastico, vince il trascinamento.
+   */
+  impostaAngolo(gradi: number, { interazione = true }: { interazione?: boolean } = {}) {
+    if (!Number.isFinite(gradi) || !this.controllore) return;
+    if (interazione) {
+      this.primaInterazione();
+      this.avviaPrecaricamento();
+    }
+    if (this.trascinamento) return;
+    this.velocita = 0;
+    this.angolo = normalizzaAngolo(gradi);
+    this.angoloComunicato = this.angolo;
+    this.pianifica();
+  }
+
+  /** Comunica il nuovo angolo, se è cambiato (al più una volta per fotogramma). */
+  private comunicaAngolo() {
+    if (this.angolo === this.angoloComunicato) return;
+    this.angoloComunicato = this.angolo;
+    const automatica = this.autoRotazione && !this.trascinamento && this.velocita === 0;
+    this.dispatchEvent(new CustomEvent('turntable-rotazione', { detail: { angolo: this.angolo, automatica } }));
+  }
+
   // --- Interazione ----------------------------------------------------------------
 
   /** Prima interazione vera: ferma per sempre la rotazione automatica e nasconde il suggerimento. */
@@ -613,6 +658,7 @@ class TurntablePlastico extends HTMLElement {
       this.angolo = normalizzaAngolo(this.angolo);
     }
 
+    this.comunicaAngolo();
     this.disegna();
 
     // Fuori schermo o a pagina nascosta l'animazione resta sospesa; riparte da IntersectionObserver

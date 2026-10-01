@@ -19,6 +19,7 @@ const { plastico, nome } = Astro.props;
       class="plastico turntable"
       data-frame={JSON.stringify(plastico.frame)}
       data-inverti={plastico.inverti ? '' : undefined}
+      data-allineamento={plastico.allineamento || undefined}
       data-etichetta={`Plastico stampato di ${nome}, vista a 360°`}
     >
       {/* Senza JavaScript, e finché il canvas non ha disegnato, si vede la vista frontale. */}

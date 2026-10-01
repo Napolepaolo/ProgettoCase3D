@@ -40,6 +40,9 @@ const didascaliaPlastico = {
   segnaposto: 'In lavorazione',
 }[opera.plastico.tipo];
 
+// Modello e plastico girano insieme quando ci sono entrambi (src/scripts/sincronia.ts).
+const rotazioneCollegata = opera.modello !== null && opera.plastico.tipo === 'turntable';
+
 const opere = getOpere();
 const precedente = opere[opera.numero - 2];
 const successiva = opere[opera.numero];
@@ -67,7 +70,7 @@ const successiva = opere[opera.numero];
       <p class="sottotitolo opera__descrizione">{opera.descrizione}</p>
     </header>
 
-    <div class="tavola">
+    <div class="tavola" data-rotazione-collegata={rotazioneCollegata ? '' : undefined}>
       <figure class="tavola__meta tavola__meta--modello">
         <div class="tavola__riquadro">
           <ModelloDigitale opera={opera} />
@@ -91,6 +94,7 @@ const successiva = opere[opera.numero];
         </div>
         <figcaption class="etichetta tavola__didascalia">
           <span>B · Plastico stampato in&nbsp;3D — {didascaliaPlastico}</span>
+          {rotazioneCollegata && <span class="tavola__istruzioni">Gira insieme al modello digitale</span>}
         </figcaption>
       </figure>
     </div>
@@ -119,6 +123,10 @@ const successiva = opere[opera.numero];
     }
   </article>
 </BaseLayout>
+
+<script>
+  import '../../scripts/sincronia';
+</script>
 
 <style>
   .opera {

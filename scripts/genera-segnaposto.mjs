@@ -145,7 +145,7 @@ async function anteprimaSociale(scena, modello, opera) {
   const x0 = lato + 56;
   const colonna = W - x0 - 64;
   const alto = 58;
-  const marchio = await testo(`<span foreground="${COLORI.petrolio}" letter_spacing="1100">3D Building by fareLAB</span>`, {
+  const marchio = await testo(`<span foreground="${COLORI.petrolio}" letter_spacing="1100">3D Building by FareLAB</span>`, {
     font: 'Menlo 17',
     larghezza: colonna,
   });

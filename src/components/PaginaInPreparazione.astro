@@ -25,8 +25,8 @@ const { titolo, etichetta = 'Sezione', descrizione = `${titolo} — ${NOME_SITO}
   <div class="contenitore">
     <div class="provvisoria">
       <p class="provvisoria__etichetta etichetta">
-        {/* "fareLAB" resta scritto così anche dentro l'etichetta maiuscola. */}
-        {etichetta.split(/(fareLAB)/).map((parte) => (parte === 'fareLAB' ? <span class="nome-proprio">{parte}</span> : parte))}
+        {/* "FareLAB" resta scritto così anche dentro l'etichetta maiuscola. */}
+        {etichetta.split(/(FareLAB)/).map((parte) => (parte === 'FareLAB' ? <span class="nome-proprio">{parte}</span> : parte))}
       </p>
       <h1>{titolo}</h1>
       <p class="provvisoria__stato sottotitolo">In preparazione.</p>

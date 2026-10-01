@@ -1,8 +1,8 @@
 {
   "nota": "Cartella generata da scripts/genera-segnaposto.mjs (opera dimostrativa). Quando metti gli asset reali cancella questo file, o l'intera cartella: lo script non la toccherà più.",
   "file": {
-    "modello/anteprima-social.jpg": "52c553c99a71bea9185a414e50131812e65fde8857d1d7427d29f931aad25a16",
-    "modello/modello.glb": "13bbce59638ede0e22aed1b36d1eb0e045fd6e96100a31397a5f17c8537fb9e7",
+    "modello/anteprima-social.jpg": "c8d9f680184c31f280615217d22a5c72903452e89b671465ac7e922db7e17296",
+    "modello/modello.glb": "2eb104258e9d0e1900f65b1e5219dac9e8272efb748adfb63951bbf60427673b",
     "modello/poster.jpg": "3131b8effb20f0ba3abfc2ab495df05722214b63ce765c53c1d1edab7343ba2f",
     "plastico/frame/001.webp": "17af3a6534b9fb1fdc473ed013585aba55bcec899d4a1e4ccc0551550398ee29",
     "plastico/frame/002.webp": "19867dc1d7b17c7217529408e120ba4c2b458db51a6db963e5ad044652d50fae",

@@ -27,9 +27,9 @@ svg{position:absolute;right:92px;top:120px}
 <path d="M16 5 26 10.5v11L16 27 6 21.5v-11Z"/><path d="M6 10.5 16 16l10-5.5M16 16v11"/>
 <path d="M6 10.5 16 5l10 5.5" stroke="#cfc6b5"/><ellipse cx="16" cy="27.6" rx="12" ry="2.6" stroke="#cfc6b5"/></svg>
 <div class="t"><div class="eti">Galleria di edifici · modello 3D · plastico · AR</div>
-<h1>3D Building</h1><div class="firma">by fareLAB</div>
+<h1>3D Building</h1><div class="firma">by FareLAB</div>
 <p class="txt">Edifici rilevati dal cielo con il drone, stampati in scala.</p>
-<div class="piede"><span>Monopoli · Valle d’Itria · Sud-Est barese</span><span style="text-transform:none">fareLAB</span></div></div>
+<div class="piede"><span>Monopoli · Valle d’Itria · Sud-Est barese</span><span style="text-transform:none">FareLAB</span></div></div>
 </body></html>`;
 const chrome = await trovaChrome({});
 const b = await puppeteer.launch({ executablePath: chrome.percorso, headless: chrome.headless });

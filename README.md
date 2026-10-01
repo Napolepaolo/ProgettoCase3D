@@ -1,4 +1,4 @@
-# 3D Building — by fareLAB
+# 3D Building — by FareLAB
 
 Galleria di edifici rilevati con fotogrammetria da drone. Ogni opera ha una pagina con:
 
@@ -118,7 +118,7 @@ Un array di opere, nell'ordine in cui compaiono in galleria. I percorsi dei file
 | `usdz` | modello per iPhone/iPad (facoltativo, vedi [USDZ](#iphone-e-il-file-usdz)) |
 | `poster` | immagine mostrata finché il modello non è caricato, e nella galleria |
 | `anteprimaSocial` | immagine per WhatsApp e social (facoltativa: altrimenti si usa il poster) |
-| `turntable` | frame del plastico: `001.webp`, `002.webp`, … nella `cartella`. `"inverti": true` se il giro va al contrario. `null` se non ci sono ancora. |
+| `turntable` | frame del plastico: `001.webp`, `002.webp`, … nella `cartella`. `"inverti": true` se il giro va al contrario; `"allineamento": 90` (gradi, facoltativo) se il frame 001 non mostra la stessa facciata del modello, vedi [Modello e plastico girano insieme](#modello-e-plastico-girano-insieme). `null` se non ci sono ancora. |
 | `fotoPlastico` | una sola foto del plastico, usata se `turntable` è `null` |
 | `scalaAR` | lato maggiore della base del modello in AR, in **centimetri** (es. 35). Viene "cotto" nel GLB dallo script di conversione. |
 | `pubblicato` | `false` = l'opera non compare e la sua pagina non viene creata |
@@ -169,6 +169,8 @@ Esempio con lo slug `masseria-san-domenico`.
    al centro dell'inquadratura. Serve `ffmpeg` (vedi [Gli script](#estrai-framesh)). Poi in `data/opere.json`:
    `"turntable": { "cartella": "plastico/frame", "numeroFrame": 36, "estensione": "webp" }`.
    In alternativa: una sola foto in `plastico/foto.jpg` e `"fotoPlastico": "plastico/foto.jpg"`.
+   Gira il modello e controlla che il plastico mostri **la stessa facciata**: se è sfasato, aggiungi
+   `"allineamento"` (vedi [Modello e plastico girano insieme](#modello-e-plastico-girano-insieme)).
 7. **Controlla** con `npm run dev` la pagina `http://localhost:4321/opere/masseria-san-domenico/`
    (le opere non pubblicate non hanno pagina: per vederla metti temporaneamente `"pubblicato": true`).
 8. **Pubblica:** `"pubblicato": true`, poi build e pubblicazione (vedi [Pubblicazione](#pubblicazione)).
@@ -184,6 +186,26 @@ rispettive cartelle in `public/opere/`. Lo script `genera-segnaposto.mjs` e i fi
 `scripts/lib/segnaposto-*.mjs` si possono tenere (non finiscono nel sito) o cancellare.
 Il generatore non tocca mai una cartella di opera senza il suo file marcatore `.segnaposto`,
 quindi non può sovrascrivere un rilievo vero.
+
+### Modello e plastico girano insieme
+
+Nella pagina di un'opera che ha sia il modello 3D sia il giro a 360° del plastico, le due viste
+sono collegate: girando il modello (col dito, col mouse o con le frecce) il plastico mostra la foto
+presa dallo stesso lato, e girando il plastico si sposta la vista del modello. Anche la rotazione
+automatica del plastico, all'apertura della pagina, fa girare il modello.
+
+Perché le due viste coincidano, il **frame 001** deve mostrare la stessa facciata che il modello ha
+"di fronte" (quella scelta con `--rotazione` nella conversione; senza rotazione è la facciata a sud).
+Se il video del plastico parte da un'altra facciata, invece di rifare i frame basta indicare di
+quanti gradi correggere:
+
+```json
+"turntable": { "cartella": "plastico/frame", "numeroFrame": 36, "estensione": "webp", "allineamento": 90 }
+```
+
+Prova 90, 180 o -90 (o valori intermedi) finché, girando il modello, il plastico mostra la stessa
+facciata. Il collegamento si attiva da solo quando ci sono entrambi (con una sola foto del plastico
+no).
 
 ---
 

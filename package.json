@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "3D Building by fareLAB — galleria di modelli 3D di edifici da fotogrammetria da drone e dei loro plastici stampati.",
+  "description": "3D Building by FareLAB — galleria di modelli 3D di edifici da fotogrammetria da drone e dei loro plastici stampati.",
   "engines": {
     "node": ">=22.12"
   },

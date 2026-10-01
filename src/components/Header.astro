@@ -1,5 +1,5 @@
 ---
-// Testata: marchio "3D Building / by fareLAB" a sinistra, menu a destra.
+// Testata: marchio "3D Building / by FareLAB" a sinistra, menu a destra.
 import { url } from '../lib/url';
 
 const percorso = Astro.url.pathname.replace(/\/?$/, '/');
@@ -21,7 +21,7 @@ const voci = [
   <div class="contenitore testata__riga">
     <a class="marchio" href={home}>
       <span class="marchio__nome">3D Building</span>
-      <span class="marchio__firma">by fareLAB</span>
+      <span class="marchio__firma">by FareLAB</span>
     </a>
 
     <nav class="menu" aria-label="Menu principale">
@@ -85,7 +85,7 @@ const voci = [
     font-size: 0.6875rem;
     letter-spacing: var(--spaziatura-mono);
     color: var(--petrolio);
-    /* "fareLAB" si scrive così: il nome non va messo in maiuscolo. */
+    /* "FareLAB" si scrive così: il nome non va messo in maiuscolo. */
     text-transform: none;
   }
 

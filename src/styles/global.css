@@ -1,6 +1,6 @@
 /* =========================================================================
-   3D Building by fareLAB — sistema grafico
-   Identità della brochure fareLAB: carta calda, accento petrolio,
+   3D Building by FareLAB — sistema grafico
+   Identità della brochure FareLAB: carta calda, accento petrolio,
    tipografia editoriale. Atmosfera da catalogo di mostra.
    ========================================================================= */
 
@@ -187,7 +187,7 @@ hr {
   color: var(--petrolio);
 }
 
-/** Nomi propri dentro le etichette maiuscole: "fareLAB" resta scritto così. */
+/** Nomi propri dentro le etichette maiuscole: "FareLAB" resta scritto così. */
 .nome-proprio {
   text-transform: none;
 }

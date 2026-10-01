@@ -40,6 +40,8 @@ const SchemaOpera = z
         numeroFrame: z.number().int().min(2).max(720),
         estensione: z.string().regex(/^[a-z0-9]+$/i, { message: 'estensione senza punto, es. "webp"' }),
         inverti: z.boolean().optional(),
+        /** Gradi da aggiungere perché il plastico mostri la stessa facciata del modello 3D (vedi README). */
+        allineamento: z.number().min(-360).max(360).optional(),
       })
       .strict()
       .nullish(),
@@ -53,7 +55,7 @@ export type DatiOpera = z.infer<typeof SchemaOpera>;
 
 /** Come appare il plastico nella pagina: giro a 360°, singola foto, oppure segnaposto. */
 export type Plastico =
-  | { tipo: 'turntable'; frame: string[]; inverti: boolean }
+  | { tipo: 'turntable'; frame: string[]; inverti: boolean; allineamento: number }
   | { tipo: 'foto'; src: string }
   | { tipo: 'segnaposto' };
 
@@ -133,14 +135,19 @@ function leggiDati(): DatiOpera[] {
 
 function risolviPlastico(d: DatiOpera, cartella: string): Plastico {
   if (d.turntable) {
-    const { cartella: sotto, numeroFrame, estensione, inverti } = d.turntable;
+    const { cartella: sotto, numeroFrame, estensione, inverti, allineamento } = d.turntable;
     const relativi = Array.from(
       { length: numeroFrame },
       (_, i) => `${cartella}/${sotto}/${String(i + 1).padStart(3, '0')}.${estensione.toLowerCase()}`,
     );
     const mancanti = relativi.filter((p) => !esiste(p));
     if (mancanti.length === 0) {
-      return { tipo: 'turntable', frame: relativi.map((p) => url(p)), inverti: Boolean(inverti) };
+      return {
+        tipo: 'turntable',
+        frame: relativi.map((p) => url(p)),
+        inverti: Boolean(inverti),
+        allineamento: allineamento ?? 0,
+      };
     }
     avvisa(
       `"${d.slug}": mancano ${mancanti.length} frame su ${numeroFrame} (es. public/${mancanti[0]}). ` +

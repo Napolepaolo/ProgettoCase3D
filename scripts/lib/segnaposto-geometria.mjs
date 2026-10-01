@@ -400,7 +400,7 @@ export class Modello {
 export function documentoGLTF(modello, { nome, materiali }) {
   const doc = new Document();
   const radice = doc.getRoot();
-  radice.getAsset().generator = '3D Building by fareLAB — genera-segnaposto (modello dimostrativo)';
+  radice.getAsset().generator = '3D Building by FareLAB — genera-segnaposto (modello dimostrativo)';
   const buffer = doc.createBuffer();
   const mesh = doc.createMesh(nome);
 

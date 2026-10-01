@@ -171,7 +171,7 @@ function paginaSocial({ nome, localita }) {
   h1 { font-family: 'Fraunces Variable', Georgia, 'Times New Roman', serif; font-weight: 600;
     font-size: ${corpoTitolo}px; line-height: 1.06; letter-spacing: -0.02em; color: ${COLORI.inchiostro}; margin: 0; }
   .filetto { width: 56px; height: 1px; background: ${COLORI.filetto}; margin: 32px 0 18px; }
-  .marchio { color: ${COLORI.testoSecondario}; font-size: 14px; }
+  .marchio { color: ${COLORI.testoSecondario}; font-size: 14px; text-transform: none; } /* "FareLAB" si scrive così */
 </style></head>
 <body>
   <div class="modello"><img src="/render.png" alt=""></div>
@@ -179,7 +179,7 @@ function paginaSocial({ nome, localita }) {
     ${localita ? `<p class="mono luogo">${escapeHtml(localita)}</p>` : ''}
     <h1>${escapeHtml(nome)}</h1>
     <div class="filetto"></div>
-    <p class="mono marchio">3D Building by fareLAB</p>
+    <p class="mono marchio">3D Building by FareLAB</p>
   </div>
 </body></html>`;
 }
